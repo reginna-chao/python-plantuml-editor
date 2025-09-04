@@ -1,4 +1,3 @@
-# app.py - 修正中文編碼問題版本
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 import subprocess
