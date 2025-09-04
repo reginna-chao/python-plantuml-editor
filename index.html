@@ -1,464 +1,84 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>安全的 PlantUML 編輯器</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #e4e4e4;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            padding: 25px 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-        
-        .mode-selector {
-            background: #f8f9fa;
-            padding: 20px 30px;
-            border-bottom: 1px solid #e9ecef;
-        }
-        
-        .mode-tabs {
-            display: flex;
-            gap: 20px;
-        }
-        
-        .mode-tab {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .mode-tab.active {
-            background: #4CAF50;
-            color: white;
-        }
-        
-        .mode-tab:not(.active) {
-            background: #e9ecef;
-            color: #666;
-        }
-        
-        .mode-tab:hover {
-            transform: translateY(-2px);
-        }
-        
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0;
-            min-height: 70vh;
-        }
-        
-        .editor-panel {
-            padding: 30px;
-            background: #f8f9fa;
-            border-right: 1px solid #e9ecef;
-        }
-        
-        .preview-panel {
-            padding: 30px;
-            background: white;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .panel-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: #333;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .panel-title::before {
-            content: '';
-            width: 4px;
-            height: 25px;
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            border-radius: 2px;
-        }
-        
-        #plantUmlInput {
-            width: 100%;
-            height: 400px;
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            padding: 20px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.6;
-            resize: vertical;
-            transition: all 0.3s ease;
-            background: white;
-        }
-        
-        #plantUmlInput:focus {
-            outline: none;
-            border-color: #4CAF50;
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-        }
-        
-        .controls {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #5a6268;
-            transform: translateY(-2px);
-        }
-        
-        .format-selector {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        .format-selector label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        
-        .format-selector input[type="radio"] {
-            accent-color: #4CAF50;
-        }
-        
-        .preview-container {
-            flex: 1;
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            overflow: auto;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 400px;
-            position: relative;
-            padding: 20px;
-        }
-        
-        #diagramPreview {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .loading {
-            display: none;
-            color: #666;
-            font-style: italic;
-            text-align: center;
-            font-size: 16px;
-        }
-        
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-left: 10px;
-            border: 2px solid #ccc;
-            border-top: 2px solid #4CAF50;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .error {
-            color: #dc3545;
-            padding: 20px;
-            text-align: center;
-            font-size: 14px;
-            line-height: 1.5;
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            border-radius: 8px;
-            margin: 20px;
-        }
-        
-        .warning {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            color: #856404;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .warning h4 {
-            margin-bottom: 10px;
-            color: #d63031;
-        }
-        
-        .security-info {
-            background: #d1ecf1;
-            border: 1px solid #bee5eb;
-            color: #0c5460;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .security-info h4 {
-            margin-bottom: 10px;
-            color: #004085;
-        }
-        
-        .placeholder-text {
-            color: #999;
-            text-align: center;
-            font-style: italic;
-            padding: 50px 20px;
-            line-height: 1.6;
-        }
-        
-        .server-config {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .server-config label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #495057;
-        }
-        
-        .server-config input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .examples {
-            margin-top: 20px;
-            padding: 20px;
-            background: rgba(76, 175, 80, 0.1);
-            border-radius: 12px;
-            border-left: 4px solid #4CAF50;
-        }
-        
-        .examples h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.1rem;
-        }
-        
-        .example-btn {
-            display: block;
-            width: 100%;
-            text-align: left;
-            margin-bottom: 8px;
-            padding: 10px 15px;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 13px;
-        }
-        
-        .example-btn:hover {
-            background: #f8f9fa;
-            border-color: #4CAF50;
-            transform: translateX(5px);
-        }
-        
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            
-            .editor-panel {
-                border-right: none;
-                border-bottom: 1px solid #e9ecef;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .controls {
-                justify-content: center;
-            }
-        }
-        
-        .container {
-            animation: fadeIn 0.6s ease-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .mode-content {
-            display: none;
-        }
-        
-        .mode-content.active {
-            display: block;
-        }
-    </style>
+    <title>Secure PlantUML Editor</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>安全的 PlantUML 編輯器</h1>
-            <p>支援本地後端和雲端服務兩種模式</p>
+            <h1>Secure PlantUML Editor</h1>
+            <p>Supports both local backend and cloud service modes</p>
         </div>
         
         <div class="mode-selector">
             <div class="mode-tabs">
-                <button data-mode="cloud" class="mode-tab" onclick="switchMode('cloud')">雲端模式 (快速)</button>
-                <button data-mode="local" class="mode-tab" onclick="switchMode('local')">本地模式 (安全)</button>
+                <button data-mode="cloud" class="mode-tab" onclick="switchMode('cloud')">Cloud Mode (Fast)</button>
+                <button data-mode="local" class="mode-tab" onclick="switchMode('local')">Local Mode (Secure)</button>
             </div>
         </div>
         
         <div class="main-content">
             <div class="editor-panel">
-                <div class="panel-title">PlantUML 語法編輯器</div>
+                <div class="panel-title">PlantUML Syntax Editor</div>
                 
-                <!-- 雲端模式 -->
+                <!-- Cloud Mode -->
                 <div id="cloud-mode" class="mode-content" data-mode="cloud">
                     <div class="warning">
-                        <h4>⚠️ 安全性警告</h4>
-                        <p>雲端模式會將您的 PlantUML 程式碼發送到外部伺服器進行處理。請勿在此模式下處理機密或敏感資訊。</p>
+                        <h4>⚠️ Security Warning</h4>
+                        <p>Cloud mode sends your PlantUML code to an external server for processing. Do not use this mode for confidential or sensitive information.</p>
                     </div>
                 </div>
                 
-                <!-- 本地模式 -->
+                <!-- Local Mode -->
                 <div id="local-mode" class="mode-content" data-mode="local">
                     <div class="security-info">
-                        <h4>🔒 安全模式</h4>
-                        <p>本地模式會將程式碼發送到您自己的後端伺服器，確保資料不會外洩。需要設定本地後端服務。</p>
+                        <h4>🔒 Secure Mode</h4>
+                        <p>Local mode sends code to your own backend server, ensuring no data leakage. Requires a local backend service setup.</p>
                     </div>
                     
                     <div class="server-config">
-                        <label for="serverUrl">後端伺服器 URL:</label>
+                        <label for="serverUrl">Backend Server URL:</label>
                         <input type="text" id="serverUrl" value="http://localhost:5000/render" 
                                placeholder="http://localhost:5000/render">
                     </div>
                 </div>
                 
-                <textarea id="plantUmlInput" placeholder="請輸入您的 PlantUML 語法...">@startuml
+                <textarea id="plantUmlInput" placeholder="Enter your PlantUML code here...">@startuml
 !theme plain
-title 系統登入流程
+title System Login Flow
 
-actor 使用者 as User
-participant "Web應用程式" as Web
-participant "認證服務" as Auth
-participant "資料庫" as DB
+actor User as User
+participant "Web Application" as Web
+participant "Authentication Service" as Auth
+participant "Database" as DB
 
-User -> Web: 輸入帳號密碼
-Web -> Auth: 驗證請求
-Auth -> DB: 查詢使用者資料
-DB --> Auth: 回傳使用者資料
+User -> Web: Enter username & password
+Web -> Auth: Send authentication request
+Auth -> DB: Query user data
+DB --> Auth: Return user data
 
-alt 驗證成功
-    Auth --> Web: 回傳 Token
-    Web --> User: 登入成功
-else 驗證失敗
-    Auth --> Web: 錯誤訊息
-    Web --> User: 登入失敗
+alt Authentication success
+    Auth --> Web: Return Token
+    Web --> User: Login success
+else Authentication failed
+    Auth --> Web: Error message
+    Web --> User: Login failed
 end
 
 @enduml</textarea>
                 
                 <div class="controls">
                     <button class="btn btn-primary" onclick="generateDiagram()">
-                        產生圖表
+                        Generate Diagram
                     </button>
                     <button class="btn btn-secondary" onclick="clearInput()">
-                        清空內容
+                        Clear Input
                     </button>
                     <button class="btn btn-secondary" onclick="downloadDiagram()">
-                        下載圖片
+                        Download Image
                     </button>
                     
                     <div class="format-selector">
@@ -474,24 +94,24 @@ end
                 </div>
                 
                 <div class="examples">
-                    <h3>範例程式碼</h3>
-                    <button class="example-btn" onclick="loadExample('sequence')">序列圖範例</button>
-                    <button class="example-btn" onclick="loadExample('class')">類別圖範例</button>
-                    <button class="example-btn" onclick="loadExample('usecase')">使用案例圖範例</button>
-                    <button class="example-btn" onclick="loadExample('activity')">活動圖範例</button>
+                    <h3>Example Code</h3>
+                    <button class="example-btn" onclick="loadExample('sequence')">Sequence Diagram Example</button>
+                    <button class="example-btn" onclick="loadExample('class')">Class Diagram Example</button>
+                    <button class="example-btn" onclick="loadExample('usecase')">Use Case Diagram Example</button>
+                    <button class="example-btn" onclick="loadExample('activity')">Activity Diagram Example</button>
                 </div>
             </div>
             
             <div class="preview-panel">
-                <div class="panel-title">圖表預覽</div>
+                <div class="panel-title">Diagram Preview</div>
                 
                 <div class="preview-container" id="previewContainer">
-                    <div class="loading" id="loading">正在生成圖表</div>
-                    <img id="diagramPreview" style="display: none;" alt="PlantUML 圖表預覽">
+                    <div class="loading" id="loading">Generating diagram...</div>
+                    <img id="diagramPreview" style="display: none;" alt="PlantUML Diagram Preview">
                     <div id="errorMessage" style="display: none;" class="error"></div>
                     <div class="placeholder-text" id="placeholderText">
-                        <p>點擊「產生圖表」按鈕來生成您的 UML 圖表</p>
-                        <p>請選擇適合的模式：雲端模式快速方便，本地模式保護隱私</p>
+                        <p>Click the "Generate Diagram" button to render your UML diagram</p>
+                        <p>Please choose a mode: Cloud Mode is fast and convenient, Local Mode protects your privacy</p>
                     </div>
                 </div>
             </div>
@@ -510,44 +130,44 @@ end
         const examples = {
             sequence: `@startuml
 !theme plain
-title 訂單處理流程
+title Order Processing Flow
 
-actor 客戶 as Customer
-participant "電商網站" as Web
-participant "訂單系統" as Order
-participant "庫存系統" as Inventory
-participant "付款系統" as Payment
+actor Customer as Customer
+participant "E-commerce Website" as Web
+participant "Order System" as Order
+participant "Inventory System" as Inventory
+participant "Payment System" as Payment
 
-Customer -> Web: 下訂單
-Web -> Order: 建立訂單
-Order -> Inventory: 檢查庫存
+Customer -> Web: Place order
+Web -> Order: Create order
+Order -> Inventory: Check stock
 
-alt 庫存充足
-    Inventory --> Order: 庫存確認
-    Order -> Payment: 處理付款
+alt Stock available
+    Inventory --> Order: Stock confirmed
+    Order -> Payment: Process payment
     
-    alt 付款成功
-        Payment --> Order: 付款確認
-        Order -> Inventory: 扣減庫存
-        Order --> Web: 訂單成功
-        Web --> Customer: 訂單確認
-    else 付款失敗
-        Payment --> Order: 付款失敗
-        Order --> Web: 訂單失敗
-        Web --> Customer: 付款錯誤
+    alt Payment successful
+        Payment --> Order: Payment confirmed
+        Order -> Inventory: Deduct stock
+        Order --> Web: Order success
+        Web --> Customer: Order confirmation
+    else Payment failed
+        Payment --> Order: Payment failed
+        Order --> Web: Order failed
+        Web --> Customer: Payment error
     end
     
-else 庫存不足
-    Inventory --> Order: 庫存不足
-    Order --> Web: 商品缺貨
-    Web --> Customer: 缺貨通知
+else Out of stock
+    Inventory --> Order: Out of stock
+    Order --> Web: Item unavailable
+    Web --> Customer: Out of stock notice
 end
 
 @enduml`,
 
             class: `@startuml
 !theme plain
-title 電商系統類別圖
+title E-commerce System Class Diagram
 
 class User {
     -userId: String
@@ -602,92 +222,92 @@ Order ||--|| OrderStatus : has
 
             usecase: `@startuml
 !theme plain
-title 線上學習系統使用案例
+title Online Learning System Use Cases
 
 left to right direction
 
-actor 學生 as Student
-actor 教師 as Teacher
-actor 管理員 as Admin
+actor Student as Student
+actor Teacher as Teacher
+actor Admin as Admin
 
-rectangle "線上學習系統" {
+rectangle "Online Learning System" {
     
-    rectangle "學生功能" {
-        Student -- (註冊帳號)
-        Student -- (瀏覽課程)
-        Student -- (購買課程)
-        Student -- (觀看影片)
-        Student -- (下載講義)
-        Student -- (參與討論)
-        Student -- (提交作業)
+    rectangle "Student Features" {
+        Student -- (Register Account)
+        Student -- (Browse Courses)
+        Student -- (Purchase Course)
+        Student -- (Watch Videos)
+        Student -- (Download Materials)
+        Student -- (Join Discussions)
+        Student -- (Submit Assignment)
     }
     
-    rectangle "教師功能" {
-        Teacher -- (上傳課程)
-        Teacher -- (編輯課程內容)
-        Teacher -- (批改作業)
-        Teacher -- (回覆討論)
-        Teacher -- (查看學習統計)
+    rectangle "Teacher Features" {
+        Teacher -- (Upload Course)
+        Teacher -- (Edit Course Content)
+        Teacher -- (Grade Assignments)
+        Teacher -- (Reply to Discussions)
+        Teacher -- (View Learning Statistics)
     }
     
-    rectangle "管理功能" {
-        Admin -- (管理使用者)
-        Admin -- (審核課程)
-        Admin -- (系統設定)
-        Admin -- (產生報表)
+    rectangle "Admin Features" {
+        Admin -- (Manage Users)
+        Admin -- (Review Courses)
+        Admin -- (System Settings)
+        Admin -- (Generate Reports)
     }
     
-    (購買課程) ..> (註冊帳號) : <<include>>
-    (觀看影片) ..> (購買課程) : <<include>>
-    (提交作業) ..> (觀看影片) : <<extend>>
+    (Purchase Course) ..> (Register Account) : <<include>>
+    (Watch Videos) ..> (Purchase Course) : <<include>>
+    (Submit Assignment) ..> (Watch Videos) : <<extend>>
 }
 
 @enduml`,
 
             activity: `@startuml
 !theme plain
-title 客服工單處理流程
+title Customer Support Ticket Handling Process
 
 start
 
-:收到客戶工單;
-:工單自動分類;
+:Receive customer ticket;
+:Auto-categorize ticket;
 
-if (緊急工單?) then (是)
-    :立即通知值班人員;
-else (否)
+if (Urgent ticket?) then (Yes)
+    :Immediately notify on-call staff;
+else (No)
 endif
 
-:分配給合適的客服人員;
-:客服人員開始處理;
+:Assign to appropriate support staff;
+:Support staff starts handling;
 
 repeat
-    :分析問題;
-    :提供解決方案;
-    :與客戶溝通;
+    :Analyze issue;
+    :Provide solution;
+    :Communicate with customer;
     
-    if (問題解決?) then (是)
-        :標記工單為已解決;
+    if (Issue resolved?) then (Yes)
+        :Mark ticket as resolved;
         break
-    else (否)
-        if (需要升級?) then (是)
-            :升級給資深客服;
-        else (否)
+    else (No)
+        if (Need escalation?) then (Yes)
+            :Escalate to senior support;
+        else (No)
         endif
     endif
-repeat while (繼續處理?)
+repeat while (Continue handling?)
 
-:客戶確認滿意度;
+:Customer confirms satisfaction;
 
-if (客戶滿意?) then (是)
-    :工單結案;
-else (否)
-    :重新開啟工單;
-    backward :客服人員開始處理;
+if (Customer satisfied?) then (Yes)
+    :Close ticket;
+else (No)
+    :Reopen ticket;
+    backward :Support staff starts handling;
 endif
 
-:記錄處理結果;
-:更新知識庫;
+:Record resolution;
+:Update knowledge base;
 
 stop
 
@@ -697,13 +317,13 @@ stop
         function switchMode(mode) {
             currentMode = mode;
             
-            // 更新標籤頁狀態
+            // Update tab status
             document.querySelectorAll('.mode-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             document.querySelector(`.mode-tab[onclick="switchMode('${mode}')"]`).classList.add('active');
             
-            // 更新內容顯示
+            // Update content display
             document.querySelectorAll('.mode-content').forEach(content => {
                 content.classList.remove('active');
             });
@@ -719,11 +339,11 @@ stop
             const format = document.querySelector('input[name="format"]:checked').value;
 
             if (!input) {
-                showError('請輸入 PlantUML 語法');
+                showError('Please enter PlantUML code');
                 return;
             }
 
-            // 顯示載入中
+            // Show loading state
             loading.style.display = 'block';
             preview.style.display = 'none';
             errorMessage.style.display = 'none';
@@ -737,7 +357,7 @@ stop
                 }
             } catch (error) {
                 loading.style.display = 'none';
-                showError('生成失敗: ' + error.message);
+                showError('Generation failed: ' + error.message);
             }
         }
 
@@ -754,7 +374,7 @@ stop
                 preview.style.display = 'block';
                 loading.style.display = 'none';
                 
-                // 將圖片轉為 blob 以供下載
+                // Convert image to blob for download
                 fetch(imageUrl)
                     .then(response => response.blob())
                     .then(blob => {
@@ -764,7 +384,7 @@ stop
             
             testImage.onerror = function() {
                 document.getElementById('loading').style.display = 'none';
-                showError('雲端服務無法產生圖表，請檢查語法或網路連接');
+                showError('Cloud service could not generate the diagram. Please check syntax or network connection.');
             };
             
             testImage.src = imageUrl;
@@ -774,7 +394,7 @@ stop
             const serverUrl = document.getElementById('serverUrl').value;
             
             if (!serverUrl) {
-                throw new Error('請設定後端伺服器 URL');
+                throw new Error('Please set the backend server URL');
             }
             
             const response = await fetch(serverUrl, {
@@ -789,7 +409,7 @@ stop
             });
             
             if (!response.ok) {
-                let errorMsg = '伺服器錯誤';
+                let errorMsg = 'Server error';
                 try {
                     const errorData = await response.json();
                     errorMsg = errorData.error || errorMsg;
@@ -827,7 +447,7 @@ stop
 
         function downloadDiagram() {
             if (!currentImageBlob) {
-                showError('請先產生圖表');
+                showError('Please generate a diagram first');
                 return;
             }
             
@@ -847,12 +467,12 @@ stop
             generateDiagram();
         }
 
-        // 自動載入初始圖表
+        // Auto-load initial chart
         window.onload = function() {
             generateDiagram();
         };
 
-        // 快捷鍵支援
+        // Shortcut key support 
         document.getElementById('plantUmlInput').addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'Enter') {
                 generateDiagram();

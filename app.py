@@ -39,22 +39,22 @@ def render_diagram():
         
         print(f"Writing to: {input_file}")
         
-        # 使用 UTF-8 BOM 寫入檔案，確保中文字符正確處理
+        # Write file with UTF-8 BOM to ensure Chinese characters are handled correctly
         with open(input_file, 'w', encoding='utf-8-sig') as f:
             f.write(plantuml_code)
         
         jar_path = os.path.abspath(PLANTUML_JAR)
         input_path = os.path.abspath(input_file)
         
-        # 直接執行轉譯，並設定正確的編碼
+        # Execute rendering directly, ensuring proper encoding
         format_flag = '-tsvg' if output_format == 'svg' else '-tpng'
         
-        # 添加編碼參數
+        # Add encoding parameters
         cmd = ['java', '-Dfile.encoding=UTF-8', '-jar', jar_path, format_flag, '-charset', 'UTF-8', input_path]
         
         print(f"Executing command: {' '.join(cmd)}")
         
-        # 設定環境變數確保正確的編碼處理
+        # Set environment variables to ensure correct encoding handling
         env = os.environ.copy()
         env['JAVA_TOOL_OPTIONS'] = '-Dfile.encoding=UTF-8'
         
@@ -64,7 +64,7 @@ def render_diagram():
         print(f"Stdout: {result.stdout}")
         print(f"Stderr: {result.stderr}")
         
-        # PlantUML 可能返回非零代碼但仍成功生成檔案
+        # PlantUML may return a non-zero code but still generate the file successfully
         base_name = os.path.splitext(input_file)[0]
         output_file = f"{base_name}.{output_format}"
         
@@ -72,7 +72,7 @@ def render_diagram():
         print(f"Output file exists: {os.path.exists(output_file)}")
         
         if not os.path.exists(output_file):
-            # 檢查是否有其他格式的輸出檔案
+            # Check if another output format file exists
             possible_outputs = [
                 f"{base_name}.svg",
                 f"{base_name}.png"
@@ -84,12 +84,12 @@ def render_diagram():
                     print(f"Found alternative output: {output_file}")
                     break
             else:
-                # 列出臨時目錄的所有檔案
+                # List all files in the temp directory
                 temp_files = os.listdir(temp_dir)
                 print(f"Files in temp directory: {temp_files}")
                 
                 return jsonify({
-                    "error": f"無法生成輸出檔案",
+                    "error": f"Failed to generate output file",
                     "expected": output_file,
                     "temp_files": temp_files,
                     "stdout": result.stdout,
@@ -103,7 +103,7 @@ def render_diagram():
         print(f"Exception: {str(e)}")
         import traceback
         traceback.print_exc()
-        return jsonify({"error": f"伺服器錯誤: {str(e)}"}), 500
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
     finally:
         for file in [input_file, output_file]:
             if file and os.path.exists(file):
@@ -111,11 +111,11 @@ def render_diagram():
                     os.remove(file)
                     print(f"Cleaned up: {file}")
                 except Exception as e:
-                    print(f"清理檔案失敗 {file}: {e}")
+                    print(f"Failed to clean up file {file}: {e}")
 
 @app.route('/test-simple', methods=['POST'])
 def test_simple():
-    """測試簡單的英文 PlantUML"""
+    """Test a simple English PlantUML"""
     try:
         simple_code = """@startuml
 A -> B: Hello
@@ -138,7 +138,7 @@ B -> A: Hi
         
         success = os.path.exists(output_file)
         
-        # 清理
+        # Cleanup
         if os.path.exists(input_file):
             os.remove(input_file)
         if os.path.exists(output_file):
