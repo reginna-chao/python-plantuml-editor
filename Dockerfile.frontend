@@ -1,0 +1,4 @@
+# Frontend: static files served by nginx
+FROM nginx:alpine
+
+COPY index.html app.js app.css /usr/share/nginx/html/

@@ -1,0 +1,22 @@
+# Backend: Flask + Java runtime for PlantUML rendering
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# default-jre-headless: runs plantuml.jar
+# graphviz: required by PlantUML for class/component/state diagrams
+# fonts-noto-cjk: CJK glyphs so Chinese text renders instead of tofu boxes
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        default-jre-headless \
+        graphviz \
+        fonts-noto-cjk \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app.py plantuml.jar ./
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
